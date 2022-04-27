@@ -1,0 +1,75 @@
+name:                hapi-client
+version:             0.1.0.0
+github:              "githubuser/hapi-client"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2022 Author name here"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/githubuser/hapi-client#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- hapi
+- bytestring == 0.10.12.0
+
+library:
+  source-dirs: src
+
+executables:
+  hapi-client-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hapi-client
+
+  libfuzzer-example:
+    main:                LibFuzzer/Example.hs
+    source-dirs:         app
+    cc-options:
+    - -g
+    - -fsanitize=address
+    - -fsanitize-coverage=edge,indirect-calls,8bit-counters,trace-cmp
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -dynamic
+    - -no-hs-main
+    - -lFuzzer
+    - -fforce-recomp
+    - -fllvm
+    - -optc="-g"
+    - -optl="-g"
+    - -optc="-fsanitize=address"
+    - -optc="-fsanitize-coverage=edge,indirect-calls,8bit-counters,trace-cmp"
+    - -optl="-fsanitize=address"
+    - -optl="-fsanitize-coverage=edge,indirect-calls,8bit-counters,trace-cmp"
+    dependencies:
+    - hapi-client
+
+tests:
+  hapi-client-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hapi-client
