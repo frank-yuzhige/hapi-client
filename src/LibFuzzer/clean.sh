@@ -6,4 +6,5 @@ rm -rf *.hi
 rm -rf *_stub.h
 rm -rf *.o
 rm -rf lib
-rm -rf test
+rm -f test
+rm -f trace

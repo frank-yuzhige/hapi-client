@@ -11,7 +11,7 @@
 {-# HLINT ignore "Redundant $" #-}
 {-# LANGUAGE TypeOperators #-}
 
-module LibFuzzer.Example where
+module Consumer.Example where
 
 import Foreign.C.Types
 import Foreign.C.String
@@ -30,10 +30,6 @@ testOneInputM str size = do
   bs <- BS.packCStringLen (str, fromIntegral size)
   runFuzzTest cograph bs
   return 0
-
-main :: IO ()
-main = do
-  putStrLn "hello!"
 
 foreign import ccall "broken_add"
   add :: CInt -> CInt -> IO CInt
@@ -109,7 +105,7 @@ graph6 = runEnv $ runBuildAASTG $ do
   b <- p <%> var (Anything @Int)
   c <- p <%> vcall Add (Get a, Get b)
   d <- p <%> vcall Add (Get a, Get c)
-  fork p $ p <%> call Neg (IntRange (-42) 65535)
+  fork p $ p <%> call Neg (Get c)
   fork p $ p <%> call (HLib.+) (Get c, Get c)
   p <%> call Mul (Get a, Get d)
   where p = Building @A @c

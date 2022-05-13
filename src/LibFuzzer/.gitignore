@@ -1,0 +1,7 @@
+crash-*
+*.hi
+*_stub.h
+*.o
+lib
+test
+trace
