@@ -63,51 +63,51 @@ graph1 :: forall c. BasicSpec c => AASTG A c
 graph1 = runEnv $ runBuildAASTG $ do
   a <- p <%> val @Int 10
   b <- p <%> var @Int Anything
-  p <%> call Add (Get a, Get b)
+  p <%> call Add (getVar a, getVar b)
   where p = Building @A @c
 
 graph2 :: forall c. BasicSpec c => AASTG A c
 graph2 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  p <%> call Add (Get a, Get b)
+  p <%> call Add (getVar a, getVar b)
   where p = Building @A @c
 
 graph3 :: forall c. BasicSpec c => AASTG A c
 graph3 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (Get b, Get a)
-  p <%> call Add (Get a, Get c)
+  c <- p <%> vcall Add (getVar b, getVar a)
+  p <%> call Add (getVar a, getVar c)
   where p = Building @A @c
 
 graph4 :: forall c. BasicSpec c => AASTG A c
 graph4 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (Get a, Get b)
-  d <- p <%> vcall Add (Get a, Get c)
-  p <%> call Add (Get c, Get d)
+  c <- p <%> vcall Add (getVar a, getVar b)
+  d <- p <%> vcall Add (getVar a, getVar c)
+  p <%> call Add (getVar c, getVar d)
   where p = Building @A @c
 
 graph5 :: forall c. BasicSpec c => AASTG A c
 graph5 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (Get a, Get b)
-  d <- p <%> vcall Sub (Get a, Get c)
-  p <%> call Add (Get c, Get d)
+  c <- p <%> vcall Add (getVar a, getVar b)
+  d <- p <%> vcall Sub (getVar a, getVar c)
+  p <%> call Add (getVar c, getVar d)
   where p = Building @A @c
 
 graph6 :: forall c. BasicSpec c => AASTG A c
 graph6 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (Get a, Get b)
-  d <- p <%> vcall Add (Get a, Get c)
-  fork p $ p <%> call Neg (Get c)
-  fork p $ p <%> call (HLib.+) (Get c, Get c)
-  p <%> call Mul (Get a, Get d)
+  c <- p <%> vcall Add (getVar a, getVar b)
+  d <- p <%> vcall Add (getVar a, getVar c)
+  fork p $ p <%> call Neg (getVar c)
+  fork p $ p <%> call (HLib.+) (getVar c, getVar c)
+  p <%> call Mul (getVar a, getVar d)
   where p = Building @A @c
 
 cograph :: forall c. BasicSpec c => AASTG A c

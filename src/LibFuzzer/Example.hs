@@ -22,18 +22,15 @@ import Control.Monad.IO.Class (liftIO)
 import Test.HAPI.HLib.HLibPrelude
 import qualified Test.HAPI.HLib.HLibPrelude as HLib
 
+conduct :: LibFuzzerConduct
+conduct = libFuzzerConductViaAASTG cograph
+
 foreign export ccall "LLVMFuzzerTestOneInput" testOneInputM
   :: CString -> CSize -> IO CInt
 
-testOneInputM :: CString -> CSize -> IO CInt
-testOneInputM str size = do
-  bs <- BS.packCStringLen (str, fromIntegral size)
-  runFuzzTest cograph bs
-  return 0
+testOneInputM = llvmFuzzerTestOneInputM conduct
 
-main :: IO ()
-main = do
-  putStrLn "hello!"
+main = mainM conduct
 
 foreign import ccall "broken_add"
   add :: CInt -> CInt -> IO CInt
@@ -56,10 +53,10 @@ deriving instance Eq       (ArithApi p a)
 instance ApiName  ArithApi
 
 instance HasForeignDef ArithApi where
-  evalForeign Add [args|a b|] = fromIntegral <$> liftIO (add (fromIntegral a) (fromIntegral b))
-  evalForeign Sub [args|a b|] = fromIntegral <$> liftIO (sub (fromIntegral a) (fromIntegral b))
-  evalForeign Mul [args|a b|] = fromIntegral <$> liftIO (mul (fromIntegral a) (fromIntegral b))
-  evalForeign Neg [args|a|]   = fromIntegral <$> liftIO (neg (fromIntegral a))
+  evalForeign Add = implE $ \a b -> fromIntegral <$> liftIO (add (fromIntegral a) (fromIntegral b))
+  evalForeign Sub = implE $ \a b -> fromIntegral <$> liftIO (sub (fromIntegral a) (fromIntegral b))
+  evalForeign Mul = implE $ \a b -> fromIntegral <$> liftIO (mul (fromIntegral a) (fromIntegral b))
+  evalForeign Neg = implE $ \a   -> fromIntegral <$> liftIO (neg (fromIntegral a))
 
 type A = ArithApi :$$: HLibPrelude
 
@@ -67,51 +64,51 @@ graph1 :: forall c. BasicSpec c => AASTG A c
 graph1 = runEnv $ runBuildAASTG $ do
   a <- p <%> val @Int 10
   b <- p <%> var @Int Anything
-  p <%> call Add (Get a, Get b)
+  p <%> call Add (getVar a, getVar b)
   where p = Building @A @c
 
 graph2 :: forall c. BasicSpec c => AASTG A c
 graph2 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  p <%> call Add (Get a, Get b)
+  p <%> call Add (getVar a, getVar b)
   where p = Building @A @c
 
 graph3 :: forall c. BasicSpec c => AASTG A c
 graph3 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (Get b, Get a)
-  p <%> call Add (Get a, Get c)
+  c <- p <%> vcall Add (getVar b, getVar a)
+  p <%> call Add (getVar a, getVar c)
   where p = Building @A @c
 
 graph4 :: forall c. BasicSpec c => AASTG A c
 graph4 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (Get a, Get b)
-  d <- p <%> vcall Add (Get a, Get c)
-  p <%> call Add (Get c, Get d)
+  c <- p <%> vcall Add (getVar a, getVar b)
+  d <- p <%> vcall Add (getVar a, getVar c)
+  p <%> call Add (getVar c, getVar d)
   where p = Building @A @c
 
 graph5 :: forall c. BasicSpec c => AASTG A c
 graph5 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (Get a, Get b)
-  d <- p <%> vcall Sub (Get a, Get c)
-  p <%> call Add (Get c, Get d)
+  c <- p <%> vcall Add (getVar a, getVar b)
+  d <- p <%> vcall Sub (getVar a, getVar c)
+  p <%> call Add (getVar c, getVar d)
   where p = Building @A @c
 
 graph6 :: forall c. BasicSpec c => AASTG A c
 graph6 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (Get a, Get b)
-  d <- p <%> vcall Add (Get a, Get c)
+  c <- p <%> vcall Add (getVar a, getVar b)
+  d <- p <%> vcall Add (getVar a, getVar c)
   fork p $ p <%> call Neg (IntRange (-42) 65535)
-  fork p $ p <%> call (HLib.+) (Get c, Get c)
-  p <%> call Mul (Get a, Get d)
+  fork p $ p <%> call (HLib.+) (getVar c, getVar c)
+  p <%> call Mul (getVar a, getVar d)
   where p = Building @A @c
 
 cograph :: forall c. BasicSpec c => AASTG A c
