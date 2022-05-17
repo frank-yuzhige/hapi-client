@@ -8,3 +8,5 @@ rm -rf *.o
 rm -rf lib
 rm -f test
 rm -f trace
+rm -f ghc-*.sh
+rm -f hsinit.c

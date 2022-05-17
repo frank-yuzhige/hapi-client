@@ -4,12 +4,14 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Redundant $" #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE LambdaCase #-}
 
 module LibFuzzer.Example where
 
@@ -21,9 +23,11 @@ import Data.Data (Typeable)
 import Control.Monad.IO.Class (liftIO)
 import Test.HAPI.HLib.HLibPrelude
 import qualified Test.HAPI.HLib.HLibPrelude as HLib
+import Test.HAPI.ApiTrace.CodeGen.C.DataType
+import Test.HAPI.Constraint
 
 conduct :: LibFuzzerConduct
-conduct = libFuzzerConductViaAASTG cograph
+conduct = libFuzzerConductViaAASTG (cograph @(Fuzzable :<>: CCodeGen))
 
 foreign export ccall "LLVMFuzzerTestOneInput" testOneInputM
   :: CString -> CSize -> IO CInt
@@ -50,7 +54,13 @@ data ArithApi :: ApiDefinition where
 deriving instance Typeable (ArithApi p a)
 deriving instance Show     (ArithApi p a)
 deriving instance Eq       (ArithApi p a)
-instance ApiName  ArithApi
+
+instance ApiName  ArithApi where
+  apiNameUnder "C" Add = "broken_add"
+  apiNameUnder "C" Sub = "segfault_minus"
+  apiNameUnder "C" Mul = "stateful_multiply"
+  apiNameUnder "C" Neg = "limited_input_range_negate"
+  apiNameUnder _   a   = apiName a
 
 instance HasForeignDef ArithApi where
   evalForeign Add = implE $ \a b -> fromIntegral <$> liftIO (add (fromIntegral a) (fromIntegral b))
@@ -78,7 +88,7 @@ graph3 :: forall c. BasicSpec c => AASTG A c
 graph3 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (getVar b, getVar a)
+  c <- p <%> call Add (getVar b, getVar a)
   p <%> call Add (getVar a, getVar c)
   where p = Building @A @c
 
@@ -86,8 +96,8 @@ graph4 :: forall c. BasicSpec c => AASTG A c
 graph4 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (getVar a, getVar b)
-  d <- p <%> vcall Add (getVar a, getVar c)
+  c <- p <%> call Add (getVar a, getVar b)
+  d <- p <%> call Add (getVar a, getVar c)
   p <%> call Add (getVar c, getVar d)
   where p = Building @A @c
 
@@ -95,8 +105,8 @@ graph5 :: forall c. BasicSpec c => AASTG A c
 graph5 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (getVar a, getVar b)
-  d <- p <%> vcall Sub (getVar a, getVar c)
+  c <- p <%> call Add (getVar a, getVar b)
+  d <- p <%> call Sub (getVar a, getVar c)
   p <%> call Add (getVar c, getVar d)
   where p = Building @A @c
 
@@ -104,8 +114,8 @@ graph6 :: forall c. BasicSpec c => AASTG A c
 graph6 = runEnv $ runBuildAASTG $ do
   a <- p <%> var (Anything @Int)
   b <- p <%> var (Anything @Int)
-  c <- p <%> vcall Add (getVar a, getVar b)
-  d <- p <%> vcall Add (getVar a, getVar c)
+  c <- p <%> call Add (getVar a, getVar b)
+  d <- p <%> call Add (getVar a, getVar c)
   fork p $ p <%> call Neg (IntRange (-42) 65535)
   fork p $ p <%> call (HLib.+) (getVar c, getVar c)
   p <%> call Mul (getVar a, getVar d)
