@@ -42,12 +42,12 @@ extra-deps:
 - fused-effects-1.1.1.1@sha256:c029c5fb0b2154281221a71ff25709d2a11347fe061fa8c2398e7fe52a16008d,4932
 - tuple-hlist-0.2.0.1@sha256:b567c5eb6e9012b5076d425c3999bdd99af2ea66a6f370b3874fc3754c4854a3,1016
 - type-level-sets-0.8.9.0@sha256:e29f4045b68e46e0f88153c63f48fb026917eeacafd9b81fc059417a85e68031,3123
+- opusfile-0.1.0.1@sha256:af399433b8f8d4aa98b598219c09966d37401437edc69dc2e67e72697f2fde41,1723
 
 # - acme-missiles-0.3
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
-# extra-deps: []
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

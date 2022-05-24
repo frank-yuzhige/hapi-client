@@ -2,10 +2,10 @@
 set -ex
 
 CURRDIR=$PWD
-APINAME="broken-arith"
+APINAME="opusfile"
 APISOURCEDIR="test/test-api"
-EXTRALIB="lib"
-MAIN_IS="LibFuzzer.Example"
+EXTRALIB="/usr/lib"
+MAIN_IS="OpusFile.Example"
 UTILDIR="../Util"
 HSINIT="hsinit.c"
 GHCOPTS="-package hapi -I""${EXTRALIB}"
@@ -18,11 +18,11 @@ GHCWRAPPER="ghc-wrapper.sh"
 
 export PATH="/usr/bin:$PATH"
 # Build and install test API
-mkdir -p "${EXTRALIB}"
-cd "${CURRDIR}"/../../"${APISOURCEDIR}"/"${APINAME}"
-make all
-cp -x lib"${APINAME}".so "${CURRDIR}"/"${EXTRALIB}"
-cd "${CURRDIR}"
+# mkdir -p "${EXTRALIB}"
+# cd "${CURRDIR}"/../../"${APISOURCEDIR}"/"${APINAME}"
+# make all
+# cp -x lib"${APINAME}".so "${CURRDIR}"/"${EXTRALIB}"
+# cd "${CURRDIR}"
 
 # Load GHC wrapper scripts and hsinit.c
 for FILE in ${HSINIT} ${GHCWRAPPER} ${GHCASAN} ${GHCFUZZERNOLINK}

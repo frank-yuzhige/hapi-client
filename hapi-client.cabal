@@ -27,7 +27,15 @@ library
   exposed-modules:
       Consumer.Example
       Lib
+      LibCurl.Curl.Code
+      LibCurl.Curl.Easy
+      LibCurl.Curl.Opts
+      LibCurl.Curl.Post
+      LibCurl.Curl.Types
+      LibCurl.Example
       LibFuzzer.Example
+      OpusFile.Example
+      Stateless.Example
   other-modules:
       Paths_hapi_client
   hs-source-dirs:
@@ -37,8 +45,11 @@ library
   build-depends:
       base >=4.7 && <5
     , bytestring ==0.10.12.0
+    , cereal >=0.5.8.2
     , hapi
+    , hashable >=1.4.0.2
     , llvm-hs ==9.0.0
+    , opusfile ==0.1.0.1
   default-language: Haskell2010
 
 executable hapi-client-exe
@@ -53,9 +64,12 @@ executable hapi-client-exe
   build-depends:
       base >=4.7 && <5
     , bytestring ==0.10.12.0
+    , cereal >=0.5.8.2
     , hapi
     , hapi-client
+    , hashable >=1.4.0.2
     , llvm-hs ==9.0.0
+    , opusfile ==0.1.0.1
   default-language: Haskell2010
 
 executable libfuzzer-example
@@ -71,9 +85,12 @@ executable libfuzzer-example
   build-depends:
       base >=4.7 && <5
     , bytestring ==0.10.12.0
+    , cereal >=0.5.8.2
     , hapi
     , hapi-client
+    , hashable >=1.4.0.2
     , llvm-hs ==9.0.0
+    , opusfile ==0.1.0.1
   default-language: Haskell2010
 
 test-suite hapi-client-test
@@ -89,7 +106,10 @@ test-suite hapi-client-test
   build-depends:
       base >=4.7 && <5
     , bytestring ==0.10.12.0
+    , cereal >=0.5.8.2
     , hapi
     , hapi-client
+    , hashable >=1.4.0.2
     , llvm-hs ==9.0.0
+    , opusfile ==0.1.0.1
   default-language: Haskell2010

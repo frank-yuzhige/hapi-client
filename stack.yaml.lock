@@ -5,14 +5,14 @@
 
 packages:
 - completed:
-    size: 49575
+    size: 55191
     filepath: /home/fyu/Workspace/hapi/.stack-work/dist/x86_64-linux-tinfo6/Cabal-3.2.1.0/hapi-0.1.0.0.tar.gz
     name: hapi
     version: 0.1.0.0
-    sha256: 864dfbe0b5121542d5827f3ed462c8623aad6e24dd5027a4795e00c5d387be50
+    sha256: 90a774606e00b063183b3016abd6a270be3e61290e5fda464bda2050a72c443f
     pantry-tree:
-      size: 4119
-      sha256: 5ec0090b4319848733777cfc57e66cd6570b34ee97582b74ecf545d67c03f82c
+      size: 4678
+      sha256: 65e2f3e50b9a7871974e93e6259c2d470f773530e4bc1930945a608089704aab
   original:
     filepath: /home/fyu/Workspace/hapi/.stack-work/dist/x86_64-linux-tinfo6/Cabal-3.2.1.0/hapi-0.1.0.0.tar.gz
 - completed:
@@ -50,6 +50,13 @@ packages:
       sha256: e7b4e38017e1231b70c511f95a057692a43366408137639da510b25155662a09
   original:
     hackage: type-level-sets-0.8.9.0@sha256:e29f4045b68e46e0f88153c63f48fb026917eeacafd9b81fc059417a85e68031,3123
+- completed:
+    hackage: opusfile-0.1.0.1@sha256:af399433b8f8d4aa98b598219c09966d37401437edc69dc2e67e72697f2fde41,1723
+    pantry-tree:
+      size: 387
+      sha256: bce3a013a00fbdcd97ad8c35a5454b1f8fc0918d9a4a72200929bf37281e77aa
+  original:
+    hackage: opusfile-0.1.0.1@sha256:af399433b8f8d4aa98b598219c09966d37401437edc69dc2e67e72697f2fde41,1723
 snapshots:
 - completed:
     size: 586296
