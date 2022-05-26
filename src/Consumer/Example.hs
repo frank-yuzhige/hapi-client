@@ -19,7 +19,7 @@ import qualified Data.ByteString as BS
 import Test.HAPI
 import Data.Data (Typeable)
 import Control.Monad.IO.Class (liftIO)
-import Test.HAPI.HLib.HLibPrelude
+import Test.HAPI.HLib.HLibPrelude (HLibPrelude)
 import qualified Test.HAPI.HLib.HLibPrelude as HLib
 
 foreign export ccall "LLVMFuzzerTestOneInput" testOneInputM
@@ -59,56 +59,56 @@ instance HasForeignDef ArithApi where
 
 type A = ArithApi :$$: HLibPrelude
 
-graph1 :: forall c. BasicSpec c => AASTG A c
-graph1 = runEnv $ runBuildAASTG $ do
-  a <- p <%> val @Int 10
-  b <- p <%> var @Int Anything
-  p <%> call Add (getVar a, getVar b)
-  where p = Building @A @c
+-- graph1 :: forall c. BasicSpec c => AASTG A c
+-- graph1 = runEnv $ runBuildAASTG $ do
+--   a <- p <%> val @Int 10
+--   b <- p <%> var @Int anything
+--   p <%> call Add (getVar a, getVar b)
+--   where p = Building @A @c
 
-graph2 :: forall c. BasicSpec c => AASTG A c
-graph2 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
-  p <%> call Add (getVar a, getVar b)
-  where p = Building @A @c
+-- graph2 :: forall c. BasicSpec c => AASTG A c
+-- graph2 = runEnv $ runBuildAASTG $ do
+--   a <- p <%> var anything
+--   b <- p <%> var anything
+--   p <%> call Add (getVar a, getVar b)
+--   where p = Building @A @c
 
-graph3 :: forall c. BasicSpec c => AASTG A c
-graph3 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
-  c <- p <%> call Add (getVar b, getVar a)
-  p <%> call Add (getVar a, getVar c)
-  where p = Building @A @c
+-- graph3 :: forall c. BasicSpec c => AASTG A c
+-- graph3 = runEnv $ runBuildAASTG $ do
+--   a <- p <%> var anything
+--   b <- p <%> var anything
+--   c <- p <%> call Add (getVar b, getVar a)
+--   p <%> call Add (getVar a, getVar c)
+--   where p = Building @A @c
 
-graph4 :: forall c. BasicSpec c => AASTG A c
-graph4 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
-  c <- p <%> call Add (getVar a, getVar b)
-  d <- p <%> call Add (getVar a, getVar c)
-  p <%> call Add (getVar c, getVar d)
-  where p = Building @A @c
+-- graph4 :: forall c. BasicSpec c => AASTG A c
+-- graph4 = runEnv $ runBuildAASTG $ do
+--   a <- p <%> var anything
+--   b <- p <%> var anything
+--   c <- p <%> call Add (getVar a, getVar b)
+--   d <- p <%> call Add (getVar a, getVar c)
+--   p <%> call Add (getVar c, getVar d)
+--   where p = Building @A @c
 
-graph5 :: forall c. BasicSpec c => AASTG A c
-graph5 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
-  c <- p <%> call Add (getVar a, getVar b)
-  d <- p <%> call Sub (getVar a, getVar c)
-  p <%> call Add (getVar c, getVar d)
-  where p = Building @A @c
+-- graph5 :: forall c. BasicSpec c => AASTG A c
+-- graph5 = runEnv $ runBuildAASTG $ do
+--   a <- p <%> var anything
+--   b <- p <%> var anything
+--   c <- p <%> call Add (getVar a, getVar b)
+--   d <- p <%> call Sub (getVar a, getVar c)
+--   p <%> call Add (getVar c, getVar d)
+--   where p = Building @A @c
 
-graph6 :: forall c. BasicSpec c => AASTG A c
-graph6 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
-  c <- p <%> call Add (getVar a, getVar b)
-  d <- p <%> call Add (getVar a, getVar c)
-  fork p $ p <%> call Neg (getVar c)
-  fork p $ p <%> call (HLib.+) (getVar c, getVar c)
-  p <%> call Mul (getVar a, getVar d)
-  where p = Building @A @c
+-- graph6 :: forall c. BasicSpec c => AASTG A c
+-- graph6 = runEnv $ runBuildAASTG $ do
+--   a <- p <%> var anything
+--   b <- p <%> var anything
+--   c <- p <%> call Add (getVar a, getVar b)
+--   d <- p <%> call Add (getVar a, getVar c)
+--   fork p $ p <%> call Neg (getVar c)
+--   fork p $ p <%> call (HLib.+) (getVar c, getVar c)
+--   p <%> call Mul (getVar a, getVar d)
+--   where p = Building @A @c
 
-cograph :: forall c. BasicSpec c => AASTG A c
-cograph = runEnv $ coalesceAASTGs 500 [graph1, graph2, graph3, graph4, graph5, graph6]
+-- cograph :: forall c. BasicSpec c => AASTG A c
+-- cograph = runEnv $ coalesceAASTGs 500 [graph1, graph2, graph3, graph4, graph5, graph6]

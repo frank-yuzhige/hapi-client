@@ -12,6 +12,7 @@
 {-# HLINT ignore "Redundant $" #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module LibFuzzer.Example where
 
@@ -21,13 +22,14 @@ import qualified Data.ByteString as BS
 import Test.HAPI
 import Data.Data (Typeable)
 import Control.Monad.IO.Class (liftIO)
-import Test.HAPI.HLib.HLibPrelude
+import Test.HAPI.HLib.HLibPrelude (HLibPrelude)
 import qualified Test.HAPI.HLib.HLibPrelude as HLib
 import Test.HAPI.ApiTrace.CodeGen.C.DataType
 import Test.HAPI.Constraint
+import Data.Serialize (Serialize)
 
 conduct :: LibFuzzerConduct
-conduct = libFuzzerConductViaAASTG (cograph @(Fuzzable :<>: CCodeGen))
+conduct = libFuzzerConductViaAASTG cograph
 
 foreign export ccall "LLVMFuzzerTestOneInput" testOneInputM
   :: CString -> CSize -> IO CInt
@@ -70,57 +72,58 @@ instance HasForeignDef ArithApi where
   evalForeign Neg = implE $ \a   -> fromIntegral <$> liftIO (neg (fromIntegral a))
 
 type A = ArithApi :$$: HLibPrelude
+type C = HSerialize :<>: Fuzzable :<>: CCodeGen
 
-graph1 :: forall c. BasicSpec c => AASTG A c
+graph1 :: AASTG A C
 graph1 = runEnv $ runBuildAASTG $ do
   a <- p <%> val @Int 10
-  b <- p <%> var @Int Anything
+  b <- p <%> var @Int anything
   p <%> call Add (getVar a, getVar b)
-  where p = Building @A @c
+  where p = Building @A @C
 
-graph2 :: forall c. BasicSpec c => AASTG A c
+graph2 :: AASTG A C
 graph2 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
+  a <- p <%> var anything
+  b <- p <%> var anything
   p <%> call Add (getVar a, getVar b)
-  where p = Building @A @c
+  where p = Building @A @C
 
-graph3 :: forall c. BasicSpec c => AASTG A c
+graph3 :: AASTG A C
 graph3 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
+  a <- p <%> var anything
+  b <- p <%> var anything
   c <- p <%> call Add (getVar b, getVar a)
   p <%> call Add (getVar a, getVar c)
-  where p = Building @A @c
+  where p = Building @A @C
 
-graph4 :: forall c. BasicSpec c => AASTG A c
+graph4 :: AASTG A C
 graph4 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
+  a <- p <%> var anything
+  b <- p <%> var anything
   c <- p <%> call Add (getVar a, getVar b)
   d <- p <%> call Add (getVar a, getVar c)
   p <%> call Add (getVar c, getVar d)
-  where p = Building @A @c
+  where p = Building @A @C
 
-graph5 :: forall c. BasicSpec c => AASTG A c
+graph5 :: AASTG A C
 graph5 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
+  a <- p <%> var anything
+  b <- p <%> var anything
   c <- p <%> call Add (getVar a, getVar b)
   d <- p <%> call Sub (getVar a, getVar c)
   p <%> call Add (getVar c, getVar d)
-  where p = Building @A @c
+  where p = Building @A @C
 
-graph6 :: forall c. BasicSpec c => AASTG A c
+graph6 :: AASTG A C
 graph6 = runEnv $ runBuildAASTG $ do
-  a <- p <%> var (Anything @Int)
-  b <- p <%> var (Anything @Int)
+  a <- p <%> var anything
+  b <- p <%> var anything
   c <- p <%> call Add (getVar a, getVar b)
   d <- p <%> call Add (getVar a, getVar c)
-  fork p $ p <%> call Neg (IntRange (-42) 65535)
+  fork p $ p <%> call Neg (irange (-42) 65535)
   fork p $ p <%> call (HLib.+) (getVar c, getVar c)
   p <%> call Mul (getVar a, getVar d)
-  where p = Building @A @c
+  where p = Building @A @C
 
-cograph :: forall c. BasicSpec c => AASTG A c
+cograph :: AASTG A C
 cograph = runEnv $ coalesceAASTGs 500 [graph1, graph2, graph3, graph4, graph5, graph6]

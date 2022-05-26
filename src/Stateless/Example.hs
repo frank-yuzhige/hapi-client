@@ -23,9 +23,10 @@ import qualified Data.ByteString as BS
 import Test.HAPI
 import Data.Data (Typeable)
 import Control.Monad.IO.Class (liftIO)
-import Test.HAPI.HLib.HLibPrelude
 import qualified Test.HAPI.HLib.HLibPrelude as HLib
 import Test.HAPI.Constraint
+import Data.Serialize (Serialize)
+import Test.HAPI.HLib.HLibPrelude (HLibPrelude)
 
 conduct :: LibFuzzerConduct
 conduct = libFuzzerConductViaAASTG cograph
@@ -73,12 +74,12 @@ instance HasForeignDef ArithApi where
 
 type A = ArithApi :$$: HLibPrelude
 
-type C = Fuzzable :<>: CCodeGen
+type C = Fuzzable :<>: CCodeGen :<>: HSerialize
 
 graph1 :: AASTG A C
 graph1 = runEnv $ runBuildAASTG $ do
   a <- p <%> val @Int 10
-  b <- p <%> var @Int Anything
+  b <- p <%> var anything
   p <%> call Add (getVar a, getVar b)
   where p = Building @A @C
 
@@ -86,8 +87,8 @@ graph1 = runEnv $ runBuildAASTG $ do
 addComp :: AASTG A C
 addComp = runEnv $ runBuildAASTG $ do
   s <- p <%> currNode
-  a <- p <%> var @Int Anything
-  b <- p <%> var @Int Anything
+  a <- p <%> var anything
+  b <- p <%> var anything
   x <- p <%> call Add (getVar a, getVar b)
   y <- p <%> call (HLib.+) (getVar a, getVar b)
   p <%> assertTrue (HLib.==) (getVar x, getVar y)
@@ -98,8 +99,8 @@ addComp = runEnv $ runBuildAASTG $ do
 addAssoc :: AASTG A C
 addAssoc = runEnv $ runBuildAASTG $ do
   s <- p <%> currNode
-  a <- p <%> var @Int Anything
-  b <- p <%> var @Int Anything
+  a <- p <%> var anything
+  b <- p <%> var anything
   x <- p <%> call Add (getVar a, getVar b)
   y <- p <%> call Add (getVar b, getVar a)
   p <%> assertTrue (HLib.==) (getVar x, getVar y)
@@ -110,8 +111,8 @@ addAssoc = runEnv $ runBuildAASTG $ do
 mulAssoc :: AASTG A C
 mulAssoc = runEnv $ runBuildAASTG $ do
   s <- p <%> currNode
-  a <- p <%> var @Int Anything
-  b <- p <%> var @Int Anything
+  a <- p <%> var anything
+  b <- p <%> var anything
   x <- p <%> call Mul (getVar a, getVar b)
   y <- p <%> call Mul (getVar b, getVar a)
   p <%> assertTrue (HLib.==) (getVar x, getVar y)
@@ -119,5 +120,29 @@ mulAssoc = runEnv $ runBuildAASTG $ do
   -- p <%(s', s)%> redirect
   where p = Building @A @C
 
+
+{-
+s <- val 0
+a <- call Push (...)
+s1 <- val 1 + getVar s
+
+x, y > 0
+pre: ?b.b=y/=0.Any
+gen: z=div(x, y)
+post: {}
+
+pre: z=div(x, y).Any
+gen: z1=x/y
+post: {}
+
+pre: z1=x/y.z=div(x, y).Any
+gen: b1=z1==z
+post: {}
+
+pre: b1=z1==z.z1=x/y.z=div(x, y).Any
+gen: assert b1
+post: {}
+
+-}
 cograph :: AASTG A C
 cograph = runEnv $ coalesceAASTGs 500 [addAssoc,  addComp, mulAssoc]

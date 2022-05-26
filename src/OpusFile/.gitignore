@@ -1,4 +1,6 @@
 crash-*
+leak-*
+hapi_newfile
 *.hi
 *_stub.h
 *.o

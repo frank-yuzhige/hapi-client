@@ -52,12 +52,6 @@ instance HasForeignDef LibCurlEasy where
 type A = LibCurlEasy :$$: HLibPrelude
 
 type C = Fuzzable :<>: CCodeGen
-
--- getInfo :: AASTG A C
--- getInfo = runEnv $ runBuildAASTG $ do
---   curl <- p <%> call Initialize ()
---   _
---   where p = Building @A @C
-
+;
 
 

@@ -2,6 +2,8 @@
 set -ex
 
 rm -f ./crash-*
+rm -f ./leak-*
+rm -f ./hapi_*
 rm -f ./*.hi
 rm -f ./*_stub.h
 rm -f ./*.o

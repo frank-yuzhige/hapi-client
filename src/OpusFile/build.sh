@@ -4,11 +4,11 @@ set -ex
 CURRDIR=$PWD
 APINAME="opusfile"
 APISOURCEDIR="test/test-api"
-EXTRALIB="/usr/lib"
+EXTRALIB="/lib"
 MAIN_IS="OpusFile.Example"
 UTILDIR="../Util"
 HSINIT="hsinit.c"
-GHCOPTS="-package hapi -I""${EXTRALIB}"
+GHCOPTS="-package hapi -package opusfile -I""${EXTRALIB}"
 GHCOPTS_NOLINK="${GHCOPTS}"" -main-is ""${MAIN_IS}"
 GHCLIB=$(stack ghc -- --print-libdir)/include
 GHCASAN="ghc-asan.sh"
@@ -18,11 +18,11 @@ GHCWRAPPER="ghc-wrapper.sh"
 
 export PATH="/usr/bin:$PATH"
 # Build and install test API
-# mkdir -p "${EXTRALIB}"
-# cd "${CURRDIR}"/../../"${APISOURCEDIR}"/"${APINAME}"
-# make all
-# cp -x lib"${APINAME}".so "${CURRDIR}"/"${EXTRALIB}"
-# cd "${CURRDIR}"
+mkdir -p "${EXTRALIB}"
+cd "${CURRDIR}"/../../"${APISOURCEDIR}"/"${APINAME}"
+make
+cp -r ./.libs/ "${CURRDIR}"/"${EXTRALIB}"
+cd "${CURRDIR}"
 
 # Load GHC wrapper scripts and hsinit.c
 for FILE in ${HSINIT} ${GHCWRAPPER} ${GHCASAN} ${GHCFUZZERNOLINK}
