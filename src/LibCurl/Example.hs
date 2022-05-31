@@ -52,6 +52,5 @@ instance HasForeignDef LibCurlEasy where
 type A = LibCurlEasy :$$: HLibPrelude
 
 type C = Fuzzable :<>: CCodeGen
-;
 
 

@@ -29,7 +29,7 @@ import Data.Serialize (Serialize)
 import Test.HAPI.HLib.HLibPrelude (HLibPrelude)
 
 conduct :: LibFuzzerConduct
-conduct = libFuzzerConductViaAASTG cograph
+conduct = libFuzzerConductViaAASTG [] cograph
 
 foreign export ccall "LLVMFuzzerTestOneInput" testOneInputM
   :: CString -> CSize -> IO CInt
@@ -79,19 +79,19 @@ type C = Fuzzable :<>: CCodeGen :<>: HSerialize
 graph1 :: AASTG A C
 graph1 = runEnv $ runBuildAASTG $ do
   a <- p <%> val @Int 10
-  b <- p <%> var anything
-  p <%> call Add (getVar a, getVar b)
+  b <- p <%> decl anything
+  p <%> call Add (var a, var b)
   where p = Building @A @C
 
 
 addComp :: AASTG A C
 addComp = runEnv $ runBuildAASTG $ do
   s <- p <%> currNode
-  a <- p <%> var anything
-  b <- p <%> var anything
-  x <- p <%> call Add (getVar a, getVar b)
-  y <- p <%> call (HLib.+) (getVar a, getVar b)
-  p <%> assertTrue (HLib.==) (getVar x, getVar y)
+  a <- p <%> decl anything
+  b <- p <%> decl anything
+  x <- p <%> call Add (var a, var b)
+  y <- p <%> call (HLib.+) (var a, var b)
+  p <%> assertTrue (HLib.==) (var x, var y)
   s' <- p <%> currNode
   p <%(s', s)%> redirect
   where p = Building @A @C
@@ -99,11 +99,11 @@ addComp = runEnv $ runBuildAASTG $ do
 addAssoc :: AASTG A C
 addAssoc = runEnv $ runBuildAASTG $ do
   s <- p <%> currNode
-  a <- p <%> var anything
-  b <- p <%> var anything
-  x <- p <%> call Add (getVar a, getVar b)
-  y <- p <%> call Add (getVar b, getVar a)
-  p <%> assertTrue (HLib.==) (getVar x, getVar y)
+  a <- p <%> decl anything
+  b <- p <%> decl anything
+  x <- p <%> call Add (var a, var b)
+  y <- p <%> call Add (var b, var a)
+  p <%> assertTrue (HLib.==) (var x, var y)
   s' <- p <%> currNode
   p <%(s', s)%> redirect
   where p = Building @A @C
@@ -111,11 +111,11 @@ addAssoc = runEnv $ runBuildAASTG $ do
 mulAssoc :: AASTG A C
 mulAssoc = runEnv $ runBuildAASTG $ do
   s <- p <%> currNode
-  a <- p <%> var anything
-  b <- p <%> var anything
-  x <- p <%> call Mul (getVar a, getVar b)
-  y <- p <%> call Mul (getVar b, getVar a)
-  p <%> assertTrue (HLib.==) (getVar x, getVar y)
+  a <- p <%> decl anything
+  b <- p <%> decl anything
+  x <- p <%> call Mul (var a, var b)
+  y <- p <%> call Mul (var b, var a)
+  p <%> assertTrue (HLib.==) (var x, var y)
   -- s' <- p <%> currNode
   -- p <%(s', s)%> redirect
   where p = Building @A @C
@@ -124,7 +124,7 @@ mulAssoc = runEnv $ runBuildAASTG $ do
 {-
 s <- val 0
 a <- call Push (...)
-s1 <- val 1 + getVar s
+s1 <- val 1 + var s
 
 x, y > 0
 pre: ?b.b=y/=0.Any

@@ -1643,7 +1643,9 @@ static OggOpusFile *op_open_close_on_failure(void *_stream,
     return NULL;
   }
   of=op_open_callbacks(_stream,_cb,NULL,0,_error);
-  if(OP_UNLIKELY(of==NULL))(*_cb->close)(_stream);
+  if(OP_UNLIKELY(of==NULL)){
+    (*_cb->close)(_stream);
+  }
   return of;
 }
 
@@ -1669,7 +1671,9 @@ static OggOpusFile *op_test_close_on_failure(void *_stream,
     return NULL;
   }
   of=op_test_callbacks(_stream,_cb,NULL,0,_error);
-  if(OP_UNLIKELY(of==NULL))(*_cb->close)(_stream);
+  if(OP_UNLIKELY(of==NULL)) {
+    (*_cb->close)(_stream);
+  }
   return of;
 }
 
@@ -1691,6 +1695,9 @@ int op_test_open(OggOpusFile *_of){
   ret=op_open2(_of);
   /*op_open2() will clear this structure on failure.
     Reset its contents to prevent double-frees in op_free().*/
+  if (OP_UNLIKELY(ret<0)) {
+    printf("opusfile op_test_open unlikely.... ret=%d\n", ret);
+  }
   if(OP_UNLIKELY(ret<0))memset(_of,0,sizeof(*_of));
   return ret;
 }

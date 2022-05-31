@@ -5,7 +5,14 @@ hapi_newfile
 *_stub.h
 *.o
 lib
+include
 test
 trace
+debug
+corpus/*
+!corpus/*.opus
 ghc-*.sh
 hsinit.c
+hapi_newfile_*
+rep
+rep.c
