@@ -4,6 +4,9 @@ crash-*
 *.o
 lib
 test
+qc
 trace
 ghc-*.sh
 hsinit.c
+rep.c
+rep

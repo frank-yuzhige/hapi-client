@@ -10,3 +10,5 @@ rm -f test
 rm -f trace
 rm -f ghc-*.sh
 rm -f hsinit.c
+rm -f qc
+rm -f qc

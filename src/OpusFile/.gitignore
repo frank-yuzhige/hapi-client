@@ -10,8 +10,11 @@ test
 trace
 debug
 corpus/*
+corpus-min
 !corpus/*.opus
 ghc-*.sh
+*.profdata
+*.profraw
 hsinit.c
 hapi_newfile_*
 rep

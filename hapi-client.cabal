@@ -33,12 +33,13 @@ library
       LibCurl.Curl.Post
       LibCurl.Curl.Types
       LibCurl.Example
-      LibFuzzer.Example
       OpusFile.Debug
       OpusFile.Example
       OpusFile.Test
       OpusFile.Trace
       Stateless.Example
+      Stateless.LibFuzzer
+      Stateless.QC
   other-modules:
       Paths_hapi_client
   hs-source-dirs:

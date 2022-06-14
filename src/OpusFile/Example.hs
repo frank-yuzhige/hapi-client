@@ -7,22 +7,22 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Redundant bracket" #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module OpusFile.Example where
 import Test.HAPI
+import Foreign
 import Foreign.C
-import Data.Data (Typeable)
+import Foreign.CStorable (CStorable (..))
 
 import Control.Monad.IO.Class (liftIO)
 import Data.ByteString (ByteString)
-import Foreign
+import Data.Data (Typeable)
+import Data.Hashable (Hashable)
 import Data.Serialize (Serialize (..))
 import GHC.Generics (Generic)
-import Data.Hashable (Hashable)
-import GHC.Ptr (Ptr(..))
 
 import qualified Test.HAPI.HLib.HLibPrelude as HLib
 import qualified Test.HAPI.HLib.HLibPtr     as HLib
@@ -30,31 +30,22 @@ import qualified Test.HAPI.HLib.HLibCString as HLib
 import qualified Test.HAPI.HLib.HLibFS      as HLib
 
 import Test.HAPI.HLib.HLibPrelude (HLibPrelude)
-import Test.HAPI.HLib.HLibPtr (HLibPtr)
+import Test.HAPI.HLib.HLibPtr     (HLibPtr)
 import Test.HAPI.HLib.HLibCString (HLibCString)
-import Test.HAPI.HLib.HLibFS (HLibFS)
-import Foreign.CStorable (CStorable (..))
+import Test.HAPI.HLib.HLibFS      (HLibFS)
 
 conduct :: LibFuzzerConduct
-conduct = libFuzzerConductViaAASTG ["opusfile"] (castAASTG g)
+conduct = libFuzzerConductViaAASTG ["opusfile"] (castAASTG graph)
   where
-    g  = runEnv $ coalesceRuleAASTGs 500 [g1, g2, g3]
-    g1 = runEnv $ runBuildTypedAASTG @A @C gOpenFile
-    g2 = runEnv $ runBuildTypedAASTG @A @C gOpenMemory
-    g3 = runEnv $ runBuildTypedAASTG @A @C gTagsParse
-
-ggg :: IO (AASTG A C)
-ggg = runEnvIO @IO $ coalesceAASTGs 500 [g1, g2]
-  where
-    g1 = runEnv $ runBuildAASTG @A @C gOpenFile
-    g2 = runEnv $ runBuildAASTG @A @C gOpenMemory
-
--- foreign export ccall "LLVMFuzzerTestOneInput" testOneInputM
---   :: CString -> CSize -> IO CInt
-
--- testOneInputM = llvmFuzzerTestOneInputM conduct
-
--- main = mainM conduct
+    graph :: TypedAASTG A C
+    graph = runEnv $ do
+      gs <- runBuildTypedAASTG @A @C gOpenFile
+        <:> runBuildTypedAASTG @A @C gOpenMemory
+        <:> runBuildTypedAASTG @A @C gTagsParse
+        <:> runBuildTypedAASTG @A @C gTagsParseNull
+        <:> runBuildTypedAASTG @A @C (gOpenMem >>= gDecodeInt16)
+        <:> pure []
+      coalesceRuleAASTGs 500 gs
 
 data OggOpusFile
 
@@ -115,7 +106,7 @@ deriving instance Show     (OpusFileApi p a)
 deriving instance Eq       (OpusFileApi p a)
 
 instance ApiName      OpusFileApi where
-  apiNameUnder "C" = \case
+  apiName = \case
     TestMemory   -> "op_test_memory"
     TestFile     -> "op_test_file"
     TestOpen     -> "op_test_open"
@@ -124,7 +115,6 @@ instance ApiName      OpusFileApi where
     PcmTotal     -> "op_pcm_total"
     Read         -> "op_read"
     TagsParse    -> "opus_tags_parse"
-  apiNameUnder _ = apiName
 
 instance Entry2BlockC OpusFileApi
 
@@ -142,6 +132,17 @@ instance HasForeignDef OpusFileApi where
 type A = OpusFileApi :$$: HLibPrelude :$$: HLibPtr :$$: HLibCString :$$: HLibFS
 
 type C = Fuzzable :<>: HSerialize :<>: CCodeGen
+
+gOpenMem :: Eff (BuildAASTG A C) sig m => m (PKey (Ptr OggOpusFile))
+gOpenMem = do
+  ctnt  <- p <%> decl anything
+  path  <- p <%> call HLib.NewFile(var ctnt)
+  cp    <- p <%> call HLib.NewCString(var ctnt)
+  eptr  <- p <%> call (HLib.Malloc @CInt) ()
+  file  <- p <%> call TestFile(var cp, var eptr)
+  p <%> ifFalse HLib.IsNullPtr(var file)
+  return file
+  where p = Building @A @C
 
 gOpenMemory :: Eff (BuildAASTG A C) sig m => m ()
 gOpenMemory = do
@@ -181,6 +182,27 @@ gChannelCount handle = do
   -- ctnt  <- p <%> var anything
   where p = Building @A @C
 
+gDecodeInt16 :: Eff (BuildAASTG A C) sig m
+             => PKey (Ptr OggOpusFile)
+             -> m ()
+gDecodeInt16 handle = do
+  hPcmSize <- p <%> call PcmTotal (var handle, value (-1))
+  chanCnt  <- p <%> call ChannelCount (var handle, value (-1))
+  byteSize <- p <%> decl (Direct $ DCastInt $ Get hPcmSize .* DCastInt (Get chanCnt) .* sampleBytes)
+  fptr     <- p <%> call (HLib.MallocBytes @Int16) (var byteSize)
+  samplesDone <- p <%> val 0
+  p <%> while (Get samplesDone .== Get hPcmSize) (loopBody fptr hPcmSize chanCnt samplesDone)
+  where
+    sampleBytes = Value $ fromIntegral $ Foreign.sizeOf (0 :: Int16)
+    p = Building @A @C
+    loopBody fptr hPcmSize chanCnt samplesDone = do
+      ret <- p <%> call Read (var handle, var fptr, Direct (DCastInt $ Get hPcmSize .* DCastInt (Get chanCnt)) , Direct DNullptr)
+      p <%> contIf (Get ret .>= Value 0)
+      p <%> update samplesDone (Direct $ Get samplesDone .+ DCastInt (Get ret))
+      f' <- p <%> call HLib.PlusPtr (var fptr, Direct $ DCastInt (Get ret) .* DCastInt (Get chanCnt) .* DCastInt sampleBytes)
+      p <%> update fptr (Direct $ Get f')
+      return ()
+
 gTagsParse :: Eff (BuildAASTG A C) sig m => m ()
 gTagsParse = do
   tags  <- p <%> call (HLib.Malloc @OpusTags) ()
@@ -190,12 +212,22 @@ gTagsParse = do
   ds'   <- p <%> decl (Direct $ DCastInt (Get len))
   p <%> call TagsParse (var tags, var dat, var ds')
   return ()
+  where p = Building @A @C
 
+gTagsParseNull :: Eff (BuildAASTG A C) sig m => m ()
+gTagsParseNull = do
+  tags  <- p <%> decl (Direct DNullptr)
+  ctnt  <- p <%> decl anything
+  dat   <- p <%> call HLib.NewCBytes(var ctnt)
+  len   <- p <%> call HLib.CBytesLen(var ctnt)
+  ds'   <- p <%> decl (Direct $ DCastInt (Get len))
+  p <%> call TagsParse (var tags, var dat, var ds')
+  return ()
   where p = Building @A @C
 
 instance TyConstC OggOpusFile where
-  toCConst _ = undefined -- Phantom type
-  toCType  _ = ctype "OggOpusFile"
+  toCConst _ = undefined -- We do not contain constant OggOpusFile struct in the stub
+  toCBType _ = CBNamed "OggOpusFile"
 
 instance CStorable OpusTags
 instance Storable OpusTags where
@@ -205,5 +237,14 @@ instance Storable OpusTags where
   peek = cPeek
 
 instance TyConstC OpusTags where
-  toCConst _ = undefined -- TODO: can use compound literal (struct MyStruct){x,y,...,z};
-  toCType  _ = ctype "OpusTags"
+  toCConst _ = undefined -- We do not contain constant OpusTags struct in the stub
+  toCBType _ = CBNamed "OpusTags"
+
+-- helper function
+(<:>) :: Monad m => m a -> m [a] -> m [a]
+a <:> b = do
+  a' <- a
+  b' <- b
+  return (a' : b')
+
+infixr 4 <:>
