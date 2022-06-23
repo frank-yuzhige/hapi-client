@@ -1,0 +1,15 @@
+digraph {
+    0 [label=0];
+    1 [label=1];
+    2 [label=2];
+    3 [label=3];
+    4 [label=4];
+    5 [label=5];
+    6 [label=6];
+    0 -> 1 [label="<update p0 = NULL>"];
+    1 -> 2 [label="<update c1 = Anything>"];
+    2 -> 3 [label="<p2 = new_c_bytes(c1)>"];
+    3 -> 4 [label="<i3 = c_bytes_len(c1)>"];
+    4 -> 5 [label="<update c4 = (i3 as int)>"];
+    5 -> 6 [label="<c5 = opus_tags_parse(p0, p2, c4)>"];
+}

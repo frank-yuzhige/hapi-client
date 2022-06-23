@@ -1,0 +1,29 @@
+digraph {
+    0 [label=0];
+    1 [label=1];
+    2 [label=2];
+    3 [label=3];
+    4 [label=4];
+    5 [label=5];
+    6 [label=6];
+    7 [label=7];
+    8 [label=8];
+    9 [label=9];
+    10 [label=10];
+    11 [label=11];
+    12 [label=12];
+    13 [label=13];
+    0 -> 1 [label="<update b0 = Anything>"];
+    1 -> 2 [label="<c1 = new_file_bytes(b0)>"];
+    2 -> 3 [label="<p2 = new_c_string(c1)>"];
+    3 -> 4 [label="<p3 = malloc()>"];
+    4 -> 5 [label="<p4 = op_test_file(p2, p3)>"];
+    5 -> 7 [label="<b5 = is_null_ptr(p4)>"];
+    6 -> 8 [label="<c6 = op_test_open(p4)>"];
+    7 -> 6 [label="<if !b5>"];
+    8 -> 10 [label="<b7 = c6 == 0>"];
+    9 -> 11 [label="<c8 = op_channel_count(p4, -1)>"];
+    10 -> 9 [label="<assert b7>"];
+    11 -> 12 [label="<assert ((2 == c8) || (3 == c8))>"];
+    12 -> 13 [label="<u9 = op_free(p4)>"];
+}

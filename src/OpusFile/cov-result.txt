@@ -1,0 +1,15 @@
+./test -detect_leaks=0 -print_coverage=1 -close_fd_mask=1 -rss_limit_mb=8192   3493.92s user 71.25s system 99% cpu 59:47.43 tota
+
+Filename                                                                     Regions    Missed Regions     Cover   Functions  Missed Functions  Executed       Lines      Missed Lines     Cover    Branches   Missed Branches     Cover
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+home/fyu/Workspace/hapi-client/test/test-api/opusfile/src/info.c                 623               504    19.10%          34                24    29.41%         648               487    24.85%         412               352    14.56%
+home/fyu/Workspace/hapi-client/test/test-api/opusfile/src/internal.c              15                15     0.00%           1                 1     0.00%          15                15     0.00%          12                12     0.00%
+home/fyu/Workspace/hapi-client/test/test-api/opusfile/src/opusfile.c            1694               900    46.87%          79                28    64.56%        2017               901    55.33%        1046               640    38.81%
+home/fyu/Workspace/hapi-client/test/test-api/opusfile/src/stream.c                68                55    19.12%          12                 7    41.67%         104                76    26.92%          42                37    11.90%
+
+Files which contain no functions:
+home/fyu/Workspace/hapi-client/test/test-api/opusfile/include/opusfile.h           0                 0         -           0                 0         -           0                 0         -           0                 0         -
+home/fyu/Workspace/hapi-client/test/test-api/opusfile/src/internal.h               0                 0         -           0                 0         -           0                 0         -           0                 0         -
+usr/include/opus/opus_defines.h                                                    0                 0         -           0                 0         -           0                 0         -           0                 0         -
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                           2400              1474    38.58%         126                60    52.38%        2784              1479    46.88%        1512              1041    31.15%

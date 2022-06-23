@@ -33,8 +33,8 @@ do
 done
 clang -Wall -c -I"${GHCLIB}" -I"${CURRDIR}"/"include" "${HSINIT}"
 
+sh "${GHCFUZZERNOLINK}" "${GHCOPTS}"" -main-is ""${TRACE_MAIN_IS}" -c Example.hs Trace.hs
+sh "${GHCFUZZERNOLINK}" "${GHCOPTS}"" -main-is ""${TRACE_MAIN_IS}" -o trace Example.o Trace.o hsinit.o
 sh "${GHCASAN}" "${GHCOPTS}" -c Example.hs Test.hs Debug.hs
 sh "${GHCASAN}" "${GHCOPTS}" -no-hs-main -o test Example.o Test.o hsinit.o
 sh "${GHCASAN}" "${GHCOPTS}" -no-hs-main -o debug Example.o Debug.o hsinit.o
-sh "${GHCFUZZERNOLINK}" "${GHCOPTS}"" -main-is ""${TRACE_MAIN_IS}" -c Example.hs Trace.hs
-sh "${GHCFUZZERNOLINK}" "${GHCOPTS}"" -main-is ""${TRACE_MAIN_IS}" -o trace Example.o Trace.o hsinit.o

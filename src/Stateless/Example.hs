@@ -28,6 +28,11 @@ import Test.HAPI.Constraint
 import Data.Serialize (Serialize)
 import Test.HAPI.HLib.HLibPrelude (HLibPrelude)
 import Test.HAPI.Conduct.Quickcheck (QuickCheckConduct, quickCheckConduct)
+import qualified Test.HAPI.PState as PS
+import qualified Control.Carrier.Trace.Printing as PRINTING
+import Control.Carrier.State.Church (runState)
+import Control.Carrier.Error.Church (runError, Has)
+import Text.Printf (printf)
 
 -- conduct :: LibFuzzerConduct
 -- conduct = libFuzzerConductViaAASTG [] cograph
@@ -176,5 +181,60 @@ negComp = runEnv $ runBuildAASTG $ do
   p <%> assertTrue (HLib.==) (var x, var y)
   where p = Building @A @C
 
+useless1 :: AASTG A C
+useless1 = runEnv $ runBuildAASTG $ do
+  p <%> val "123"
+  where p = Building @A @C
+
+useless2 :: AASTG A C
+useless2 = runEnv $ runBuildAASTG $ do
+  p <%> val "456"
+  where p = Building @A @C
+
+useless3 :: AASTG A C
+useless3 = runEnv $ runBuildAASTG $ do
+  p <%> val "789"
+  where p = Building @A @C
+
+useless4 :: AASTG A C
+useless4 = runEnv $ runBuildAASTG $ do
+  p <%> val "ggwp"
+  where p = Building @A @C
+
 cograph :: AASTG A C
 cograph = runEnv $ coalesceAASTGs 500 [addComp, subComp, mulComp, divComp, negComp]
+
+
+exampleFuzzer :: IO ()
+exampleFuzzer = runEnvIO go
+  where
+   go = do
+    liftIO $ printf "--------------------------\n"
+    s <- runError @EVSError (return . Left . show) return
+          $ runError @PropertyError  (fail . show) pure
+          $ runError @VarUpdateError (fail . show) pure
+          $ runGenIO
+          $ runState @PState (\s a -> return a) PS.emptyPState
+          $ runProperty @(PropertyA C)
+          $ runForeign (return . Left . show) (return . Right)
+          $ PRINTING.runTrace
+          $ runApiFFI @A @C
+          $ runVarUpdateEval @A @C
+          $ runEVSFuzzArbitraryAC @C
+          $ stub
+    case s of
+      Left err -> liftIO (printf "error: %s\n" err ) >> go
+      _        -> go
+
+
+stub :: Has (Api A C :+: EVS C :+: VarUpdate A C :+: PropertyA C) sig m => m ()
+stub = do
+            let x = (PKey "x" :: PKey CInt)
+                y = (PKey "y" :: PKey CInt)
+                z = (PKey "z" :: PKey CInt)
+            e <- send (EExogenous @CInt @C Anything)
+            send (VarUpdate @CInt @C @A x e)
+            send (MkCall @A @_ @CInt @C y (injApi Add) (Get x :* Get x :* Nil))
+            send (MkCall @A @_ @CInt @C z (injApi Sub) (Get y :* Get y :* Nil))
+            send (AssertA @C (Get z .== Value 0))
+

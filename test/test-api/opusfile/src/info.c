@@ -211,7 +211,7 @@ static int opus_tags_parse_impl(OpusTags *_tags,
       /*Needed by opus_tags_clear() if we fail before parsing the (optional)
          binary metadata.*/
       /* [HAPI]: This line of code is the fix patch. Remove it to reintroduce the old bug.*/
-      /* _tags->user_comments[ci+1]=NULL; */
+      _tags->user_comments[ci+1]=NULL;
     }
     _data+=count;
     len-=count;

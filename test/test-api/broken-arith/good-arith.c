@@ -1,7 +1,3 @@
-#include <ctype.h>
-#include <stdlib.h>
-#include <stdio.h>
-
 int good_add(int a, int b) {
     return a + b;
 }

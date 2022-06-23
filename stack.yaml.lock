@@ -5,14 +5,14 @@
 
 packages:
 - completed:
-    size: 70314
+    size: 71004
     filepath: /home/fyu/Workspace/hapi/.stack-work/dist/x86_64-linux-tinfo6/Cabal-3.2.1.0/hapi-0.1.0.0.tar.gz
     name: hapi
     version: 0.1.0.0
-    sha256: 6c23ad5d4d0b5bbab2d87363c556d411d540834d2e5e901f502fe069312765e3
+    sha256: 54160910a0fdacdef8689b3c059491aa2f9f6172c5992c66e1bf18a5880342c3
     pantry-tree:
-      size: 5532
-      sha256: 81f84169fa4077428c1d85f9191eff362c18b83eb38ad2388dc30c74b3e1e4ff
+      size: 5533
+      sha256: 59d59677f6851795db9e40ea4c3ac510d946134a293dc12d756d13866c189ae4
   original:
     filepath: /home/fyu/Workspace/hapi/.stack-work/dist/x86_64-linux-tinfo6/Cabal-3.2.1.0/hapi-0.1.0.0.tar.gz
 - completed:
